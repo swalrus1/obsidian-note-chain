@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizeChain } from "../src/main";
+import { normalizeChain } from "../src/graph";
 
 describe("normalizeChain", () => {
 	it("returns [] for null", () => {

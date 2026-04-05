@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { chainSize } from "../src/main";
+import { chainSize } from "../src/graph";
 
 function makeOutLinks(edges: [string, string][]): Map<string, Set<string>> {
 	const out = new Map<string, Set<string>>();

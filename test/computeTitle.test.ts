@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeTitle } from "../src/main";
+import { computeTitle } from "../src/graph";
 
 // Helpers to build outLinks / inLinks maps and a minimal App mock directly,
 // without going through buildLinkMaps (which tests cover separately).

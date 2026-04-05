@@ -1,0 +1,92 @@
+import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
+import { computeGraph, computeTitle, chainSize } from "./graph";
+
+const LOG_PREFIX = "[root-notes-view]";
+
+export const VIEW_TYPE_ROOT_NOTES = "root-notes-view";
+
+export class RootNotesView extends ItemView {
+	constructor(
+		leaf: WorkspaceLeaf,
+		private openThreadView: (file: TFile) => Promise<void>
+	) {
+		super(leaf);
+	}
+
+	getViewType(): string { return VIEW_TYPE_ROOT_NOTES; }
+	getDisplayText(): string { return "Root Notes"; }
+	getIcon(): string { return "git-fork"; }
+
+	async onOpen() { this.render(); }
+	async onClose() {}
+
+	render() {
+		const container = this.containerEl.children[1] as HTMLElement;
+		container.empty();
+		container.createEl("h4", { text: "Root Notes" });
+
+		let graphData;
+		try {
+			graphData = computeGraph(this.app);
+		} catch (e) {
+			console.error(LOG_PREFIX, "Failed to compute link graph:", e);
+			container.createEl("p", {
+				text: "Error computing root notes. See developer console for details.",
+				cls: "root-notes-empty",
+			});
+			return;
+		}
+
+		const { rootNodes, cycleRoots, outLinks, inLinks } = graphData;
+
+		if (rootNodes.length === 0 && cycleRoots.length === 0) {
+			container.createEl("p", { text: "No root notes found.", cls: "root-notes-empty" });
+			return;
+		}
+
+		const ul = container.createEl("ul", { cls: "root-notes-list" });
+
+		const entries: { path: string; isCycle: boolean; chainSize: number }[] = [];
+		for (const path of rootNodes)  entries.push({ path, isCycle: false, chainSize: chainSize(path, outLinks) });
+		for (const path of cycleRoots) entries.push({ path, isCycle: true,  chainSize: chainSize(path, outLinks) });
+		entries.sort((a, b) => b.chainSize - a.chainSize);
+
+		for (const { path, isCycle } of entries) {
+			const file = this.app.vault.getAbstractFileByPath(path);
+			if (!(file instanceof TFile)) {
+				console.warn(LOG_PREFIX, `Expected a TFile at path "${path}" but got none.`);
+				continue;
+			}
+			const title = computeTitle(path, outLinks, inLinks, this.app) ?? file.basename;
+			this.createNoteItem(ul, file, title, isCycle);
+		}
+	}
+
+	private createNoteItem(ul: HTMLElement, file: TFile, title: string, isCycle: boolean) {
+		const li = ul.createEl("li", {
+			cls: isCycle ? "root-notes-item root-notes-cycle" : "root-notes-item",
+		});
+		const link = li.createEl("a", { text: title, cls: "root-notes-link" });
+		if (isCycle) {
+			li.createEl("span", {
+				text: " ↺",
+				cls: "root-notes-cycle-icon",
+				attr: { title: "Part of a cycle — no external entry point" },
+			});
+		}
+		link.addEventListener("click", (e) => {
+			e.preventDefault();
+			this.app.workspace.getLeaf(false).openFile(file);
+		});
+
+		const threadBtn = li.createEl("button", {
+			cls: "root-notes-thread-btn",
+			attr: { title: "Show thread view", "aria-label": "Show thread view" },
+		});
+		threadBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
+		threadBtn.addEventListener("click", (e) => {
+			e.preventDefault();
+			this.openThreadView(file);
+		});
+	}
+}

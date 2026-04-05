@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildLinkMaps } from "../src/main";
+import { buildLinkMaps } from "../src/graph";
 import { buildApp, mkFile } from "./helpers";
 
 describe("buildLinkMaps – explicit links", () => {
@@ -65,7 +65,8 @@ describe("buildLinkMaps – tag-based edges", () => {
 		expect(outLinks.get("old.md")).not.toContain("new.md");
 	});
 
-	it("adds no edge when two notes share a tag but have equal ctime", () => {
+	it("adds an edge ordered by path when two notes share a tag and have equal ctime", () => {
+		// Equal ctime: path tie-breaker applies (a.md < b.md), so a.md → b.md.
 		const app = buildApp({
 			files: [mkFile("a.md", 5), mkFile("b.md", 5)],
 			caches: {
@@ -73,15 +74,14 @@ describe("buildLinkMaps – tag-based edges", () => {
 				"b.md": { _tags: ["#same"] },
 			},
 		});
-		const { outLinks } = buildLinkMaps(app as never);
-		expect([...outLinks.get("a.md")!]).not.toContain("b.md");
-		expect([...outLinks.get("b.md")!]).not.toContain("a.md");
+		const { outLinks, inLinks } = buildLinkMaps(app as never);
+		expect(outLinks.get("a.md")).toContain("b.md");
+		expect(inLinks.get("b.md")).toContain("a.md");
 	});
 
-	it("chains three tag-mates consecutively, not pairwise", () => {
-		// newest(3) → mid(2) → oldest(1)
-		// Only 2 edges should be created, not 3 (pairwise would add newest→oldest too,
-		// but that's already reachable transitively).
+	it("newest note is the star hub: links directly to all other tag-mates", () => {
+		// newest(3) is the star hub: newest → mid and newest → old.
+		// mid does NOT link to old (only the hub links outward).
 		const app = buildApp({
 			files: [mkFile("old.md", 1), mkFile("mid.md", 2), mkFile("new.md", 3)],
 			caches: {
@@ -91,11 +91,30 @@ describe("buildLinkMaps – tag-based edges", () => {
 			},
 		});
 		const { outLinks } = buildLinkMaps(app as never);
-		// Consecutive edges only
+		// Hub (newest) links directly to every other note in the group
 		expect(outLinks.get("new.md")).toContain("mid.md");
-		expect(outLinks.get("mid.md")).toContain("old.md");
-		// Direct newest→oldest edge must NOT exist (that would be pairwise)
-		expect(outLinks.get("new.md")).not.toContain("old.md");
+		expect(outLinks.get("new.md")).toContain("old.md");
+		// Non-hub notes do not add tag-based edges
+		expect(outLinks.get("mid.md")).not.toContain("old.md");
+	});
+
+	it("never breaks the chain for middle-tier notes with equal ctime", () => {
+		// [A(3), B(2), C(2), D(1)] — B and C tie. Without a tie-breaker the B-C edge
+		// would be skipped, leaving C with no incoming edge and making it a spurious root.
+		const app = buildApp({
+			files: [mkFile("a.md", 3), mkFile("b.md", 2), mkFile("c.md", 2), mkFile("d.md", 1)],
+			caches: {
+				"a.md": { _tags: ["#t"] },
+				"b.md": { _tags: ["#t"] },
+				"c.md": { _tags: ["#t"] },
+				"d.md": { _tags: ["#t"] },
+			},
+		});
+		const { inLinks } = buildLinkMaps(app as never);
+		// Every note except the root must have at least one incoming tag edge.
+		expect(inLinks.get("b.md")!.size).toBeGreaterThan(0);
+		expect(inLinks.get("c.md")!.size).toBeGreaterThan(0);
+		expect(inLinks.get("d.md")!.size).toBeGreaterThan(0);
 	});
 
 	it("handles notes with multiple tags independently", () => {

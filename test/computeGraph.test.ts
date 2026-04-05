@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeGraph } from "../src/main";
+import { computeGraph } from "../src/graph";
 import { buildApp, mkFile } from "./helpers";
 
 describe("computeGraph – root detection", () => {
