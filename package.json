@@ -1,6 +1,6 @@
 {
 	"name": "root-notes-view",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Obsidian plugin that lists root notes (no backlinks) in a side panel",
 	"main": "main.js",
 	"scripts": {
