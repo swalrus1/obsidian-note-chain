@@ -1,4 +1,4 @@
-import { App, getAllTags, TFile } from "obsidian";
+import { App, getAllTags } from "obsidian";
 
 const LOG_PREFIX = "[note-chain]";
 
@@ -41,33 +41,6 @@ export function buildLinkMaps(app: App): LinkMaps {
 			if (targetPath === sourcePath) continue; // ignore self-links
 			outLinks.get(sourcePath)!.add(targetPath);
 			inLinks.get(targetPath)!.add(sourcePath);
-		}
-	}
-
-	// Among notes sharing a tag, a newer note references all older notes with that tag.
-	const tagToFiles = new Map<string, TFile[]>();
-	for (const file of allFiles) {
-		const cache = app.metadataCache.getCache(file.path);
-		if (!cache) continue;
-		for (const tag of getAllTags(cache) ?? []) {
-			if (!tagToFiles.has(tag)) tagToFiles.set(tag, []);
-			tagToFiles.get(tag)!.push(file);
-		}
-	}
-
-	for (const files of tagToFiles.values()) {
-		if (files.length < 2) continue;
-		// Sort descending by ctime, with path as a deterministic tie-breaker.
-		// Then add edges only between consecutive pairs — O(T log T) instead of O(T²).
-		// Equal-ctime notes are ordered by path so the chain is never broken and
-		// exactly one root exists per tag group.
-		files.sort((a, b) => {
-			const diff = b.stat.ctime - a.stat.ctime;
-			return diff !== 0 ? diff : a.path.localeCompare(b.path);
-		});
-		for (let i = 1; i < files.length; i++) {
-			outLinks.get(files[0].path)?.add(files[i].path);
-			inLinks.get(files[i].path)?.add(files[0].path);
 		}
 	}
 

@@ -136,8 +136,6 @@ Iterates `app.vault.getMarkdownFiles()` and `app.metadataCache.resolvedLinks` to
 
 Only markdown files are included; non-markdown targets in `resolvedLinks` are skipped. Self-links are ignored.
 
-After processing explicit links, tag-based directed edges are added. Note A references note B via a shared tag when both carry the same tag and A was created strictly later than B (`stat.ctime`). Notes with equal creation times are not connected by a tag edge. This uses `getAllTags` which combines frontmatter and inline tags.
-
 Used by both `computeGraph` and `ThreadView`.
 
 ### `computeGraph(app): GraphData`
