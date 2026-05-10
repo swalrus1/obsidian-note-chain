@@ -2,7 +2,7 @@ import { App, getAllTags, Notice } from "obsidian";
 import type { TFile } from "obsidian";
 
 const EPIGRAPH =
-	`> *This note is an index managed by plugin "Note Chain". ` +
+	`*This note is an index managed by plugin "Note Chain". ` +
 	`Call "Note Chain: Refresh index" to refresh this note.*`;
 
 export async function refreshIndex(app: App): Promise<void> {
@@ -105,7 +105,7 @@ function frontmatter(chainValue: string): string {
 }
 
 function buildTagContent(tag: string, chainValue: string, notes: TFile[]): string {
-	const list = notes.map(f => `- [[${f.basename}]]`).sort().join("\n");
+	const list = notes.map(f => `- ${tag} - [[${f.basename}]]`).sort().join("\n");
 	return [frontmatter(chainValue), "", EPIGRAPH, "", `## Tag: ${tag}`, "", list, ""].join("\n");
 }
 

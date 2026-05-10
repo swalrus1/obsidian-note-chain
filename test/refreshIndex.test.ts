@@ -42,8 +42,8 @@ describe("refreshIndex – tag indices", () => {
 		await refreshIndex(app as never);
 
 		const content = tagContent(app, "internal/index/tag/project")!;
-		expect(content).toContain("[[note-a]]");
-		expect(content).toContain("[[note-b]]");
+		expect(content).toContain("- project - [[note-a]]");
+		expect(content).toContain("- project - [[note-b]]");
 	});
 
 	it("includes the managed epigraph in tag index notes", async () => {
@@ -55,8 +55,8 @@ describe("refreshIndex – tag indices", () => {
 		await refreshIndex(app as never);
 
 		const content = tagContent(app, "internal/index/tag/mytag")!;
-		expect(content).toContain("Note Chain");
-		expect(content).toContain("Refresh index");
+		expect(content).toContain("*This note is an index");
+		expect(content).not.toContain("> *");
 	});
 
 	it("skips notes whose chain starts with internal/index when building tag map", async () => {
