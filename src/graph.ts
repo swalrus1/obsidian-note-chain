@@ -1,6 +1,6 @@
 import { App, getAllTags, TFile } from "obsidian";
 
-const LOG_PREFIX = "[root-notes-view]";
+const LOG_PREFIX = "[note-chain]";
 
 export interface LinkMaps {
 	outLinks: Map<string, Set<string>>;

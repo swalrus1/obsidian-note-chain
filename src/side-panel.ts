@@ -1,9 +1,9 @@
 import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
 import { computeGraph, computeTitle, chainSize } from "./graph";
 
-const LOG_PREFIX = "[root-notes-view]";
+const LOG_PREFIX = "[note-chain]";
 
-export const VIEW_TYPE_ROOT_NOTES = "root-notes-view";
+export const VIEW_TYPE_ROOT_NOTES = "note-chain";
 
 export class RootNotesView extends ItemView {
 	constructor(

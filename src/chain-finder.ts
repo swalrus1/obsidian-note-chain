@@ -1,6 +1,6 @@
 import { App, Editor, FuzzySuggestModal, TFile } from "obsidian";
 
-const LOG_PREFIX = "[root-notes-view]";
+const LOG_PREFIX = "[note-chain]";
 
 export interface TitleEntry {
 	title: string;

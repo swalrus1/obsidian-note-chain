@@ -12,8 +12,8 @@ Built with esbuild; output is `main.js` (single CommonJS bundle).
 Owns all lifecycle, event registration, and cross-component state.
 
 **Responsibilities:**
-- Registers both view types (`root-notes-view`, `thread-view`) on load.
-- Registers the ribbon icon and all three commands.
+- Registers both view types (`note-chain`, `thread-view`) on load.
+- Registers the ribbon icon and all four commands.
 - Owns the in-memory title map (`titleMap: Map<string, string>`).
 - Calls `rebuildTitleMap()` on the events that invalidate it.
 - Calls `refreshRootNotesView()` to repaint the sidebar after a rebuild.
@@ -29,9 +29,20 @@ Owns all lifecycle, event registration, and cross-component state.
 
 ## Component: Sidebar (`RootNotesView`)
 
-`class RootNotesView extends ItemView` — view type `root-notes-view`
+`class RootNotesView extends ItemView` — view type `note-chain`
 
-Opened in the right leaf on startup and via the "Open Root Notes View" command.
+Opened in the right leaf on startup and via the "Open Note Chain" command.
+
+---
+
+## Command: Create successor
+
+Registered as `create-successor`. Available when a file is active (`checkCallback`).
+
+1. Captures `currentFile = workspace.getActiveFile()`.
+2. Registers a one-shot `active-leaf-change` listener that inserts `[[currentFile.basename]]` into the new note's editor once it opens.
+3. Executes the built-in `zk-prefixer:new-zk-note` command (Unique note creator core plugin) via `app.commands.executeCommandById`.
+4. If the command is unavailable (plugin disabled), the listener is cleaned up immediately and an error is logged.
 
 **Render cycle** (called by `refreshRootNotesView()` and `onOpen`):
 1. Calls `computeGraph(app)` to get `rootNodes`, `cycleNodes`, `outLinks`, `inLinks`.
@@ -77,7 +88,7 @@ Populated exclusively by `plugin.rebuildTitleMap()`, which:
 3. Falls back to `file.basename` when `computeTitle` returns null.
 
 Consumed by:
-- `RootNotesSuggestModal` (fuzzy search for "Insert root note reference" command).
+- `RootNotesSuggestModal` (fuzzy search for "Link chain" command).
 - `render()` in `RootNotesView` does **not** use it; it calls `computeTitle` directly so the sidebar always shows fresh data.
 
 Collision semantics: if two root notes resolve to the same display title, the second one silently overwrites the first in the map. This is a known limitation of the prototype.
@@ -88,7 +99,7 @@ Collision semantics: if two root notes resolve to the same display title, the se
 
 `class RootNotesSuggestModal extends FuzzySuggestModal<TitleEntry>`
 
-Opened by the "Insert root note reference" command (editor callback — only active when an editor is focused).
+Opened by the "Link chain" command (editor callback — only active when an editor is focused).
 
 Snapshots `plugin.titleMap` at construction time into a `TitleEntry[]` array. On item selection, inserts `[[basename]]` at the editor cursor via `editor.replaceSelection`.
 
@@ -141,7 +152,7 @@ No external plugin dependency — uses Obsidian's native metadata cache directly
 
 ## Error Handling
 
-All unexpected errors are logged to the browser console with the `[root-notes-view]` prefix.
+All unexpected errors are logged to the browser console with the `[note-chain]` prefix.
 - `console.warn` — expected-but-notable cases (unexpected file type).
 - `console.error` — unexpected failures (graph computation, file read, markdown render).
 - `render()` in the sidebar shows an inline error message if `computeGraph` throws.

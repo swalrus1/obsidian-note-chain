@@ -1,10 +1,10 @@
-import { Editor, Plugin, TFile } from "obsidian";
+import { Editor, MarkdownView, Plugin, TFile } from "obsidian";
 import { VIEW_TYPE_ROOT_NOTES, RootNotesView } from "./side-panel";
 import { VIEW_TYPE_THREAD, ThreadView } from "./chain-view";
 import { RootNotesSuggestModal } from "./chain-finder";
 import { TitleStore } from "./title-store";
 
-const LOG_PREFIX = "[root-notes-view]";
+const LOG_PREFIX = "[note-chain]";
 
 export default class RootNotesPlugin extends Plugin {
 	private store = new TitleStore();
@@ -20,25 +20,51 @@ export default class RootNotesPlugin extends Plugin {
 			(leaf) => new ThreadView(leaf)
 		);
 
-		this.addRibbonIcon("git-fork", "Root Notes View", () => {
+		this.addRibbonIcon("git-fork", "Note Chain", () => {
 			this.activateView();
 		});
 
 		this.addCommand({
-			id: "open-root-notes-view",
-			name: "Open Root Notes View",
+			id: "open-note-chain",
+			name: "Open Note Chain",
 			callback: () => this.activateView(),
 		});
 
 		this.addCommand({
-			id: "insert-root-note-reference",
-			name: "Insert root note reference",
+			id: "link-chain",
+			name: "Link chain",
 			editorCallback: (editor: Editor) => {
 				if (this.store.map.size === 0) {
 					console.warn(LOG_PREFIX, "Title map is empty — no root notes to insert.");
 					return;
 				}
 				new RootNotesSuggestModal(this.app, this.store.map, editor).open();
+			},
+		});
+
+		this.addCommand({
+			id: "create-successor",
+			name: "Create successor",
+			checkCallback: (checking: boolean) => {
+				const currentFile = this.app.workspace.getActiveFile();
+				if (!currentFile) return false;
+				if (checking) return true;
+
+				const link = `[[${currentFile.basename}]]`;
+
+				const handler = this.app.workspace.on("active-leaf-change", (leaf) => {
+					this.app.workspace.offref(handler);
+					const view = leaf?.view;
+					if (!(view instanceof MarkdownView)) return;
+					view.editor.replaceSelection(link);
+				});
+
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				const executed = (this.app as any).commands.executeCommandById("zk-prefixer:new-zk-note");
+				if (!executed) {
+					this.app.workspace.offref(handler);
+					console.error(LOG_PREFIX, "Could not execute 'Create new unique note' — is the Unique note creator core plugin enabled?");
+				}
 			},
 		});
 

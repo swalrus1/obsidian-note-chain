@@ -1,6 +1,6 @@
 import? 'config.just'
 
-plugin_id := "root-notes-view"
+plugin_id := "note-chain"
 
 # Build the plugin and install it into the Obsidian vault
 update vault:

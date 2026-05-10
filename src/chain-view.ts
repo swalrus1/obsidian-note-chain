@@ -1,7 +1,7 @@
 import { ItemView, MarkdownRenderer, TFile, ViewStateResult, WorkspaceLeaf } from "obsidian";
 import { buildLinkMaps, basename } from "./graph";
 
-const LOG_PREFIX = "[root-notes-view]";
+const LOG_PREFIX = "[note-chain]";
 
 export const VIEW_TYPE_THREAD = "thread-view";
 

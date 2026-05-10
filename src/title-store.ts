@@ -1,7 +1,7 @@
 import { App, TFile } from "obsidian";
 import { computeGraph, computeTitle } from "./graph";
 
-const LOG_PREFIX = "[root-notes-view]";
+const LOG_PREFIX = "[note-chain]";
 
 /**
  * In-memory index: display title → file path.
