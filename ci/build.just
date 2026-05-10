@@ -29,10 +29,21 @@ test:
 dev:
     npm run dev
 
-# Bump version, commit, tag, and push to trigger the release workflow
-release version:
-    node -e "const fs=require('fs'); ['manifest.json','package.json'].forEach(f => { const j=JSON.parse(fs.readFileSync(f)); j.version='{{version}}'; fs.writeFileSync(f, JSON.stringify(j, null, '\t')+'\n'); })"
-    git add manifest.json package.json
-    git commit -m "chore: release {{version}}"
-    git tag {{version}}
-    git push origin HEAD {{version}}
+# Bump patch version, commit, tag, and push to trigger the release workflow
+release:
+    #!/usr/bin/env node
+    const fs = require('fs');
+    const cur = JSON.parse(fs.readFileSync('manifest.json')).version;
+    const parts = cur.split('.').map(Number);
+    parts[2]++;
+    const next = parts.join('.');
+    for (const f of ['manifest.json', 'package.json']) {
+        const j = JSON.parse(fs.readFileSync(f));
+        j.version = next;
+        fs.writeFileSync(f, JSON.stringify(j, null, '\t') + '\n');
+    }
+    const {execSync} = require('child_process');
+    execSync(`git add manifest.json package.json`);
+    execSync(`git commit -m "chore: release ${next}"`);
+    execSync(`git tag ${next}`);
+    execSync(`git push origin HEAD ${next}`, {stdio: 'inherit'});
