@@ -1,6 +1,6 @@
 # Plugin Architecture
 
-All source code is in `src/main.ts`. Styles are in `styles.css`.
+All source code is in `src/`. Styles are in `styles.css`.
 Built with esbuild; output is `main.js` (single CommonJS bundle).
 
 ---
@@ -13,7 +13,7 @@ Owns all lifecycle, event registration, and cross-component state.
 
 **Responsibilities:**
 - Registers both view types (`note-chain`, `thread-view`) on load.
-- Registers the ribbon icon and all four commands.
+- Registers the ribbon icon and all five commands.
 - Owns the in-memory title map (`titleMap: Map<string, string>`).
 - Calls `rebuildTitleMap()` on the events that invalidate it.
 - Calls `refreshRootNotesView()` to repaint the sidebar after a rebuild.
@@ -32,6 +32,25 @@ Owns all lifecycle, event registration, and cross-component state.
 `class RootNotesView extends ItemView` — view type `note-chain`
 
 Opened in the right leaf on startup and via the "Open Note Chain" command.
+
+---
+
+## Command: Refresh index (`src/index-builder.ts`)
+
+Registered as `refresh-index`. Rebuilds managed index notes for all tags in the vault.
+
+**Algorithm:**
+1. Scans all markdown files via `metadataCache`; skips notes whose `chain` starts with `internal/index` to avoid self-indexing.
+2. Builds `tag → TFile[]` map using `getAllTags` (covers frontmatter and inline tags).
+3. For each tag, looks for an existing note with `chain: "internal/index/tag/<tag>"`:
+   - 0 found → creates a new note via `vault.create` with a timestamp filename.
+   - 1 found → overwrites content in place.
+   - 2+ found → shows a `Notice` and throws (user must deduplicate first).
+4. Writes tag index content: YAML frontmatter with the chain value, the managed epigraph, and a sorted `[[wikilink]]` list of tagged notes.
+5. Applies the same find-or-create logic for a master index (`chain: "internal/index"`) that lists all `internal/index/` notes. Pre-existing orphaned index notes (tags since deleted) are included via the metadata cache; newly created ones are merged in directly since the cache hasn't updated yet.
+6. Shows a `Notice` on success.
+
+**Error handling:** duplicate chain values abort immediately via `assertUnique`; the error is caught in `main.ts` and logged.
 
 ---
 

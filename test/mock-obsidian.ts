@@ -32,6 +32,10 @@ export const MarkdownRenderer = {
 	render: async () => {},
 };
 
+export class Notice {
+	constructor(public message: string) {}
+}
+
 export function getAllTags(cache: { _tags?: string[] } | null): string[] | null {
 	return cache?._tags ?? null;
 }

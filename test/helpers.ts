@@ -2,6 +2,11 @@
  * Shared helpers for building lightweight mock App objects used across test suites.
  */
 
+export interface WriteRecord {
+	path: string;
+	content: string;
+}
+
 export interface MockFile {
 	path: string;
 	basename: string;
@@ -52,6 +57,43 @@ export function buildApp(opts: {
 		metadataCache: {
 			resolvedLinks,
 			getCache: (path: string) => opts.caches?.[path] ?? null,
+		},
+	};
+}
+
+/**
+ * Like buildApp but also tracks vault.create / vault.modify calls and supports
+ * dynamic file addition — needed for testing refreshIndex.
+ */
+export function buildMutableApp(opts: {
+	files: MockFile[];
+	caches?: Record<string, MockCache>;
+}) {
+	const files = [...opts.files];
+	const caches: Record<string, MockCache> = { ...opts.caches };
+	const created: WriteRecord[] = [];
+	const modified: WriteRecord[] = [];
+
+	return {
+		vault: {
+			getMarkdownFiles: () => files,
+			getAbstractFileByPath: (path: string) => files.find(f => f.path === path) ?? null,
+			create: async (path: string, content: string): Promise<MockFile> => {
+				const name = path.split("/").pop() ?? path;
+				const file: MockFile = { path, basename: name.replace(/\.md$/, ""), stat: { ctime: 0 } };
+				files.push(file);
+				created.push({ path, content });
+				return file;
+			},
+			modify: async (file: MockFile, content: string): Promise<void> => {
+				modified.push({ path: file.path, content });
+			},
+			created,
+			modified,
+		},
+		metadataCache: {
+			resolvedLinks: {} as Record<string, Record<string, number>>,
+			getCache: (path: string) => caches[path] ?? null,
 		},
 	};
 }

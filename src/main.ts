@@ -1,8 +1,9 @@
-import { Editor, MarkdownView, Plugin, TFile } from "obsidian";
+import { Editor, MarkdownView, Notice, Plugin, TFile } from "obsidian";
 import { VIEW_TYPE_ROOT_NOTES, RootNotesView } from "./side-panel";
 import { VIEW_TYPE_THREAD, ThreadView } from "./chain-view";
 import { RootNotesSuggestModal } from "./chain-finder";
 import { TitleStore } from "./title-store";
+import { refreshIndex } from "./index-builder";
 
 const LOG_PREFIX = "[note-chain]";
 
@@ -64,6 +65,18 @@ export default class RootNotesPlugin extends Plugin {
 				if (!executed) {
 					this.app.workspace.offref(handler);
 					console.error(LOG_PREFIX, "Could not execute 'Create new unique note' — is the Unique note creator core plugin enabled?");
+				}
+			},
+		});
+
+		this.addCommand({
+			id: "refresh-index",
+			name: "Refresh index",
+			callback: async () => {
+				try {
+					await refreshIndex(this.app);
+				} catch (e) {
+					console.error(LOG_PREFIX, "Refresh index failed:", e);
 				}
 			},
 		});
