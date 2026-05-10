@@ -1,4 +1,4 @@
-import { App, getAllTags } from "obsidian";
+import { App } from "obsidian";
 
 const LOG_PREFIX = "[note-chain]";
 
@@ -175,14 +175,11 @@ export function computeTitle(
 		}
 
 		// Collect chain values per note within the chain.
-		// A note is a candidate if it has a chain property or any tag.
+		// A note is a candidate if it has a chain frontmatter property.
 		const noteChains = new Map<string, string[]>();
 		for (const path of chain) {
 			const cache = app.metadataCache.getCache(path);
 			const values = normalizeChain(cache?.frontmatter?.["chain"]);
-			for (const tag of getAllTags(cache) ?? []) {
-				values.push(tag);
-			}
 			if (values.length > 0) noteChains.set(path, values);
 		}
 

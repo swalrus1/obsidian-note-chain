@@ -50,14 +50,6 @@ describe("computeTitle – single candidate", () => {
 		expect(computeTitle("a.md", outLinks, inLinks, app as never)).toBe("my-project");
 	});
 
-	it("returns a tag when the candidate has no chain property but has a tag", () => {
-		const { outLinks, inLinks } = makeLinks([]);
-		outLinks.set("a.md", new Set());
-		inLinks.set("a.md", new Set());
-		const app = makeApp({ "a.md": { _tags: ["#foo"] } });
-		expect(computeTitle("a.md", outLinks, inLinks, app as never)).toBe("#foo");
-	});
-
 	it("uses a chain array value", () => {
 		const { outLinks, inLinks } = makeLinks([]);
 		outLinks.set("a.md", new Set());
