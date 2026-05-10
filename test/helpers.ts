@@ -68,6 +68,7 @@ export function buildApp(opts: {
 export function buildMutableApp(opts: {
 	files: MockFile[];
 	caches?: Record<string, MockCache>;
+	contents?: Record<string, string>;
 }) {
 	const files = [...opts.files];
 	const caches: Record<string, MockCache> = { ...opts.caches };
@@ -87,6 +88,9 @@ export function buildMutableApp(opts: {
 			},
 			modify: async (file: MockFile, content: string): Promise<void> => {
 				modified.push({ path: file.path, content });
+			},
+			cachedRead: async (file: MockFile): Promise<string> => {
+				return opts.contents?.[file.path] ?? "";
 			},
 			created,
 			modified,

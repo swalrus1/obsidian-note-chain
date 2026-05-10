@@ -30,20 +30,64 @@ describe("refreshIndex – tag indices", () => {
 		expect(chains.some(c => c.includes('chain: "internal/index/tag/bar"'))).toBe(true);
 	});
 
-	it("lists tagged notes as wikilinks in the tag index", async () => {
+	it("lists tagged notes with first-line content", async () => {
 		const app = buildMutableApp({
 			files: [mkFile("note-a.md"), mkFile("note-b.md")],
 			caches: {
 				"note-a.md": { _tags: ["#project"] },
 				"note-b.md": { _tags: ["#project"] },
 			},
+			contents: {
+				"note-a.md": "First line of A\nSecond line",
+				"note-b.md": "First line of B\nSecond line",
+			},
 		});
 
 		await refreshIndex(app as never);
 
 		const content = tagContent(app, "internal/index/tag/project")!;
-		expect(content).toContain("- project - [[note-a]]");
-		expect(content).toContain("- project - [[note-b]]");
+		expect(content).toContain("- [[note-a]] - First line of A");
+		expect(content).toContain("- [[note-b]] - First line of B");
+	});
+
+	it("omits the dash separator when a note has no first line", async () => {
+		const app = buildMutableApp({
+			files: [mkFile("empty.md")],
+			caches: { "empty.md": { _tags: ["#x"] } },
+		});
+
+		await refreshIndex(app as never);
+
+		const content = tagContent(app, "internal/index/tag/x")!;
+		expect(content).toContain("- [[empty]]");
+		expect(content).not.toContain("- [[empty]] -");
+	});
+
+	it("truncates first lines longer than 80 characters", async () => {
+		const longLine = "A".repeat(90);
+		const app = buildMutableApp({
+			files: [mkFile("long.md")],
+			caches: { "long.md": { _tags: ["#t"] } },
+			contents: { "long.md": longLine },
+		});
+
+		await refreshIndex(app as never);
+
+		const content = tagContent(app, "internal/index/tag/t")!;
+		expect(content).toContain("- [[long]] - " + "A".repeat(80) + "...");
+	});
+
+	it("skips YAML frontmatter when reading the first line", async () => {
+		const app = buildMutableApp({
+			files: [mkFile("fm.md")],
+			caches: { "fm.md": { _tags: ["#t"] } },
+			contents: { "fm.md": "---\nchain: foo\n---\n\nActual first line" },
+		});
+
+		await refreshIndex(app as never);
+
+		const content = tagContent(app, "internal/index/tag/t")!;
+		expect(content).toContain("- [[fm]] - Actual first line");
 	});
 
 	it("includes the managed epigraph in tag index notes", async () => {
@@ -73,8 +117,6 @@ describe("refreshIndex – tag indices", () => {
 
 		await refreshIndex(app as never);
 
-		// idx.md is an existing index note → it should be overwritten (modified), not create a dupe
-		// and it must NOT appear in its own tag list
 		const content = tagContent(app, "internal/index/tag/project")!;
 		expect(content).not.toContain("[[idx]]");
 		expect(content).toContain("[[real]]");
@@ -91,7 +133,6 @@ describe("refreshIndex – tag indices", () => {
 
 		await refreshIndex(app as never);
 
-		// create should NOT have been called for the tag index
 		expect(app.vault.created.some(r => r.content.includes('chain: "internal/index/tag/alpha"'))).toBe(false);
 		expect(app.vault.modified.some(r => r.content.includes('chain: "internal/index/tag/alpha"'))).toBe(true);
 	});
@@ -100,20 +141,7 @@ describe("refreshIndex – tag indices", () => {
 // ── master index ──────────────────────────────────────────────────────────────
 
 describe("refreshIndex – master index", () => {
-	it("creates a master index listing tag index notes", async () => {
-		const app = buildMutableApp({
-			files: [mkFile("note.md")],
-			caches: { "note.md": { _tags: ["#foo"] } },
-		});
-
-		await refreshIndex(app as never);
-
-		const master = tagContent(app, "internal/index")!;
-		expect(master).toBeDefined();
-		expect(master).toContain("internal/index");
-	});
-
-	it("includes newly created tag index files in the master index", async () => {
+	it("lists tag index notes with their tag name", async () => {
 		const app = buildMutableApp({
 			files: [mkFile("note.md")],
 			caches: { "note.md": { _tags: ["#bar"] } },
@@ -122,8 +150,7 @@ describe("refreshIndex – master index", () => {
 		await refreshIndex(app as never);
 
 		const master = tagContent(app, "internal/index")!;
-		// The tag index filename (timestamp) should appear in the master wikilink list
-		expect(master).toMatch(/\[\[.+\]\]/);
+		expect(master).toMatch(/- \[\[.+\]\] - bar/);
 	});
 
 	it("overwrites an existing master index note", async () => {

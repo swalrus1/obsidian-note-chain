@@ -5,6 +5,8 @@ const EPIGRAPH =
 	`*This note is an index managed by plugin "Note Chain". ` +
 	`Call "Note Chain: Refresh index" to refresh this note.*`;
 
+type TagEntry = { file: TFile; tag: string };
+
 export async function refreshIndex(app: App): Promise<void> {
 	// 1. Build tag → files map (skip notes that are themselves index notes)
 	const tagMap = new Map<string, TFile[]>();
@@ -21,16 +23,16 @@ export async function refreshIndex(app: App): Promise<void> {
 	}
 
 	// 2. Create or update one index note per tag
-	const tagIndexFiles: TFile[] = [];
+	const tagEntries: TagEntry[] = [];
 	for (const [tag, notes] of tagMap) {
 		const chainValue = `internal/index/tag/${tag}`;
 		assertUnique(app, chainValue);
 		const existing = findByChain(app, chainValue);
-		const content = buildTagContent(tag, chainValue, notes);
+		const content = await buildTagContent(app, tag, chainValue, notes);
 		const file = existing.length === 1
 			? await overwrite(app, existing[0], content)
 			: await createUnique(app, content);
-		tagIndexFiles.push(file);
+		tagEntries.push({ file, tag });
 	}
 
 	// 3. Create or update master index
@@ -38,14 +40,18 @@ export async function refreshIndex(app: App): Promise<void> {
 	assertUnique(app, masterChain);
 	const masterExisting = findByChain(app, masterChain);
 
-	// Combine notes already indexed in the cache (orphaned from deleted tags)
-	// with the ones we just wrote (not yet reflected in the cache).
-	const allIndexFiles = dedupe([
-		...findByChainPrefix(app, "internal/index/"),
-		...tagIndexFiles,
-	]);
-	const masterContent = buildMasterContent(masterChain, allIndexFiles);
+	// Include orphaned pre-existing sub-index notes (tags since deleted from vault).
+	// Newly written tag index files are not yet in the cache, so merge explicitly.
+	const orphaned: TagEntry[] = findByChainPrefix(app, "internal/index/")
+		.filter(f => !tagEntries.some(e => e.file.path === f.path))
+		.map(f => {
+			const chain = app.metadataCache.getCache(f.path)?.frontmatter?.chain as string ?? "";
+			const tag = chain.startsWith("internal/index/tag/") ? chain.slice("internal/index/tag/".length) : "";
+			return { file: f, tag };
+		});
+	const allEntries = dedupeEntries([...orphaned, ...tagEntries]);
 
+	const masterContent = buildMasterContent(masterChain, allEntries);
 	if (masterExisting.length === 1) {
 		await overwrite(app, masterExisting[0], masterContent);
 	} else {
@@ -95,21 +101,47 @@ async function overwrite(app: App, file: TFile, content: string): Promise<TFile>
 	return file;
 }
 
-function dedupe(files: TFile[]): TFile[] {
+function dedupeEntries(entries: TagEntry[]): TagEntry[] {
 	const seen = new Set<string>();
-	return files.filter(f => !seen.has(f.path) && seen.add(f.path) as unknown as boolean);
+	return entries.filter(e => !seen.has(e.file.path) && seen.add(e.file.path) as unknown as boolean);
 }
 
 function frontmatter(chainValue: string): string {
 	return `---\nchain: "${chainValue}"\n---`;
 }
 
-function buildTagContent(tag: string, chainValue: string, notes: TFile[]): string {
-	const list = notes.map(f => `- ${tag} - [[${f.basename}]]`).sort().join("\n");
-	return [frontmatter(chainValue), "", EPIGRAPH, "", `## Tag: ${tag}`, "", list, ""].join("\n");
+async function getFirstLine(app: App, file: TFile): Promise<string> {
+	const content = await app.vault.cachedRead(file);
+	const lines = content.split("\n");
+	let i = 0;
+	// Skip YAML frontmatter block
+	if (lines[0]?.trimEnd() === "---") {
+		i = 1;
+		while (i < lines.length && lines[i]?.trimEnd() !== "---") i++;
+		i++;
+	}
+	// Find first non-empty line
+	while (i < lines.length && !lines[i]?.trim()) i++;
+	const line = lines[i]?.trim() ?? "";
+	if (!line) return "";
+	return line.length > 80 ? line.slice(0, 80) + "..." : line;
 }
 
-function buildMasterContent(chainValue: string, files: TFile[]): string {
-	const list = files.map(f => `- [[${f.basename}]]`).sort().join("\n");
+async function buildTagContent(app: App, tag: string, chainValue: string, notes: TFile[]): Promise<string> {
+	const lines = await Promise.all(
+		notes.map(async f => {
+			const first = await getFirstLine(app, f);
+			return first ? `- [[${f.basename}]] - ${first}` : `- [[${f.basename}]]`;
+		})
+	);
+	lines.sort();
+	return [frontmatter(chainValue), "", EPIGRAPH, "", `## Tag: ${tag}`, "", lines.join("\n"), ""].join("\n");
+}
+
+function buildMasterContent(chainValue: string, entries: TagEntry[]): string {
+	const list = entries
+		.map(({ file, tag }) => tag ? `- [[${file.basename}]] - ${tag}` : `- [[${file.basename}]]`)
+		.sort()
+		.join("\n");
 	return [frontmatter(chainValue), "", EPIGRAPH, "", `## Tag indices`, "", list, ""].join("\n");
 }
