@@ -59,9 +59,11 @@ Registered as `refresh-index`. Rebuilds managed index notes for all tags in the 
 Registered as `create-successor`. Available when a file is active (`checkCallback`).
 
 1. Captures `currentFile = workspace.getActiveFile()`.
-2. Registers a one-shot `active-leaf-change` listener that inserts `[[currentFile.basename]]` into the new note's editor once it opens.
+2. Registers a one-shot `file-open` listener that, on the first event delivering a file other than the original, inserts `[[currentFile.basename]]` into the active `MarkdownView`'s editor.
 3. Executes the built-in `zk-prefixer:new-zk-note` command (Unique note creator core plugin) via `app.commands.executeCommandById`.
-4. If the command is unavailable (plugin disabled), the listener is cleaned up immediately and an error is logged.
+4. If the command is unavailable (plugin disabled), the listener is cleaned up immediately, a `Notice` is shown to the user, and an error is logged.
+
+`file-open` is used rather than `active-leaf-change` because the Unique Note Creator opens the new note in the *same* active leaf — only the file changes, so `active-leaf-change` does not fire.
 
 **Render cycle** (called by `refreshRootNotesView()` and `onOpen`):
 1. Calls `computeGraph(app)` to get `rootNodes`, `cycleNodes`, `outLinks`, `inLinks`.

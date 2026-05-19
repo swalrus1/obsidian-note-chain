@@ -52,11 +52,13 @@ export default class RootNotesPlugin extends Plugin {
 				if (checking) return true;
 
 				const link = `[[${currentFile.basename}]]`;
+				const originalPath = currentFile.path;
 
-				const handler = this.app.workspace.on("active-leaf-change", (leaf) => {
+				const handler = this.app.workspace.on("file-open", (file) => {
+					if (!file || file.path === originalPath) return;
 					this.app.workspace.offref(handler);
-					const view = leaf?.view;
-					if (!(view instanceof MarkdownView)) return;
+					const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+					if (!view) return;
 					view.editor.replaceSelection(link);
 				});
 
@@ -64,7 +66,9 @@ export default class RootNotesPlugin extends Plugin {
 				const executed = (this.app as any).commands.executeCommandById("zk-prefixer:new-zk-note");
 				if (!executed) {
 					this.app.workspace.offref(handler);
-					console.error(LOG_PREFIX, "Could not execute 'Create new unique note' — is the Unique note creator core plugin enabled?");
+					const msg = "Could not execute 'Create new unique note' — is the Unique note creator core plugin enabled?";
+					new Notice(msg);
+					console.error(LOG_PREFIX, msg);
 				}
 			},
 		});
