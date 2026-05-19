@@ -1,7 +1,7 @@
 {
 	"id": "note-chain",
 	"name": "Note Chain",
-	"version": "1.0.13",
+	"version": "1.0.14",
 	"minAppVersion": "0.15.0",
 	"description": "Lists notes with no backlinks in a side panel. Highlights cycle representatives in red.",
 	"author": "",
