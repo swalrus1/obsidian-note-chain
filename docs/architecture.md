@@ -59,11 +59,14 @@ Registered as `refresh-index`. Rebuilds managed index notes for all tags in the 
 Registered as `create-successor`. Available when a file is active (`checkCallback`).
 
 1. Captures `currentFile = workspace.getActiveFile()`.
-2. Registers a one-shot `file-open` listener that, on the first event delivering a file other than the original, inserts `[[currentFile.basename]]` into the active `MarkdownView`'s editor.
-3. Executes the built-in `zk-prefixer:new-zk-note` command (Unique note creator core plugin) via `app.commands.executeCommandById`.
-4. If the command is unavailable (plugin disabled), the listener is cleaned up immediately, a `Notice` is shown to the user, and an error is logged.
+2. Looks up the Unique Note Creator's "Create new unique note" command via `findUniqueNoteCommandId()` — tries known IDs (`zk-prefixer:new-zk-note`, `unique-note-creator:new-unique-note`) first, then falls back to a name-based scan of `app.commands.commands`. Returns `null` if nothing matches.
+3. If no command was found, shows a `Notice`, logs an error (including the full list of available command IDs to aid diagnosis), and aborts.
+4. Registers a one-shot `file-open` listener that, on the first event delivering a file other than the original, inserts `[[currentFile.basename]]` into the active `MarkdownView`'s editor.
+5. Executes the resolved command via `app.commands.executeCommandById`. If execution fails, the listener is cleaned up immediately and a `Notice` is shown.
 
 `file-open` is used rather than `active-leaf-change` because the Unique Note Creator opens the new note in the *same* active leaf — only the file changes, so `active-leaf-change` does not fire.
+
+The dynamic command-id lookup exists because Obsidian's core plugin command IDs are not part of the public API and have historically shifted (e.g., `zk-prefixer` vs. potential renames); hardcoding a single ID would silently break across Obsidian versions.
 
 **Render cycle** (called by `refreshRootNotesView()` and `onOpen`):
 1. Calls `computeGraph(app)` to get `rootNodes`, `cycleNodes`, `outLinks`, `inLinks`.

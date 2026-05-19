@@ -54,6 +54,14 @@ export default class RootNotesPlugin extends Plugin {
 				const link = `[[${currentFile.basename}]]`;
 				const originalPath = currentFile.path;
 
+				const uniqueNoteCommandId = this.findUniqueNoteCommandId();
+				if (!uniqueNoteCommandId) {
+					const msg = "Could not find the 'Create new unique note' command — is the Unique note creator core plugin enabled?";
+					new Notice(msg);
+					console.error(LOG_PREFIX, msg);
+					return;
+				}
+
 				const handler = this.app.workspace.on("file-open", (file) => {
 					if (!file || file.path === originalPath) return;
 					this.app.workspace.offref(handler);
@@ -63,10 +71,10 @@ export default class RootNotesPlugin extends Plugin {
 				});
 
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				const executed = (this.app as any).commands.executeCommandById("zk-prefixer:new-zk-note");
+				const executed = (this.app as any).commands.executeCommandById(uniqueNoteCommandId);
 				if (!executed) {
 					this.app.workspace.offref(handler);
-					const msg = "Could not execute 'Create new unique note' — is the Unique note creator core plugin enabled?";
+					const msg = `Failed to execute '${uniqueNoteCommandId}'.`;
 					new Notice(msg);
 					console.error(LOG_PREFIX, msg);
 				}
@@ -144,6 +152,34 @@ export default class RootNotesPlugin extends Plugin {
 			await leaf.setViewState({ type: VIEW_TYPE_ROOT_NOTES, active: true });
 			workspace.revealLeaf(leaf);
 		}
+	}
+
+	private findUniqueNoteCommandId(): string | null {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const commands = (this.app as any).commands?.commands as
+			| Record<string, { id: string; name: string }>
+			| undefined;
+		if (!commands) return null;
+
+		const knownIds = [
+			"zk-prefixer:new-zk-note",
+			"unique-note-creator:new-unique-note",
+		];
+		for (const id of knownIds) {
+			if (commands[id]) return id;
+		}
+
+		for (const [id, cmd] of Object.entries(commands)) {
+			const name = (cmd?.name ?? "").toLowerCase();
+			if (name.includes("unique note") && name.includes("new")) return id;
+		}
+
+		console.warn(
+			LOG_PREFIX,
+			"No 'Create new unique note' command found. Available command IDs:",
+			Object.keys(commands)
+		);
+		return null;
 	}
 
 	private refreshRootNotesView() {
