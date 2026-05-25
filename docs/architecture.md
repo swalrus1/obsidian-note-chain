@@ -109,10 +109,11 @@ The view is read-only by design (no editor, no CodeMirror). Tab title is `Thread
 
 `plugin.titleMap: Map<string, string>` — maps display title → file path.
 
-Populated exclusively by `plugin.rebuildTitleMap()`, which:
+Populated exclusively by `TitleStore.rebuild(app)`, which:
 1. Calls `computeGraph(app)` to get all root and cycle node paths.
-2. For each path, resolves to a `TFile` and calls `computeTitle(...)`.
-3. Falls back to `file.basename` when `computeTitle` returns null.
+2. Resolves each path to a `TFile` (skips with a warn if missing).
+3. Sorts resolved entries by `file.stat.ctime` **descending** (newest root first) — so the Link Chain modal presents chains in the same recency order as the side panel.
+4. Calls `computeTitle(...)` per entry, falls back to `file.basename`.
 
 Consumed by:
 - `RootNotesSuggestModal` (fuzzy search for "Link chain" command).

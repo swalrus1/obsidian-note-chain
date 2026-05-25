@@ -1,4 +1,4 @@
-import { App } from "obsidian";
+import { App, TFile } from "obsidian";
 
 const LOG_PREFIX = "[note-chain]";
 
@@ -233,4 +233,14 @@ export function chainSize(rootPath: string, outLinks: Map<string, Set<string>>):
 		}
 	}
 	return visited.size;
+}
+
+export function resolveAndSortByCtime(paths: string[], app: App): TFile[] {
+	const files: TFile[] = [];
+	for (const path of paths) {
+		const file = app.vault.getAbstractFileByPath(path);
+		if (file instanceof TFile) files.push(file);
+		else console.warn(LOG_PREFIX, `Expected a TFile at path "${path}" but got none.`);
+	}
+	return files.sort((a, b) => b.stat.ctime - a.stat.ctime);
 }

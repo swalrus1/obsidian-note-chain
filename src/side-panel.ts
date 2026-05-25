@@ -1,5 +1,5 @@
 import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
-import { computeGraph, computeTitle } from "./graph";
+import { computeGraph, computeTitle, resolveAndSortByCtime } from "./graph";
 
 const LOG_PREFIX = "[note-chain]";
 
@@ -48,26 +48,12 @@ export class RootNotesView extends ItemView {
 
 		const ul = container.createEl("ul", { cls: "root-notes-list" });
 
-		const entries: { path: string; isCycle: boolean; file: TFile; ctime: number }[] = [];
-		for (const path of [...rootNodes, ...cycleRoots]) {
-			const file = this.app.vault.getAbstractFileByPath(path);
-			if (!(file instanceof TFile)) {
-				console.warn(LOG_PREFIX, `Expected a TFile at path "${path}" but got none.`);
-				continue;
-			}
-			entries.push({
-				path,
-				isCycle: cycleRoots.includes(path),
-				file,
-				ctime: file.stat.ctime,
-			});
-		}
-		entries.sort((a, b) => b.ctime - a.ctime);
-
+		const cycleSet = new Set(cycleRoots);
 		const now = Date.now();
-		for (const { path, isCycle, file, ctime } of entries) {
-			const title = computeTitle(path, outLinks, inLinks, this.app) ?? file.basename;
-			const isStale = now - ctime > STALE_THRESHOLD_MS;
+		for (const file of resolveAndSortByCtime([...rootNodes, ...cycleRoots], this.app)) {
+			const title = computeTitle(file.path, outLinks, inLinks, this.app) ?? file.basename;
+			const isCycle = cycleSet.has(file.path);
+			const isStale = now - file.stat.ctime > STALE_THRESHOLD_MS;
 			this.createNoteItem(ul, file, title, isCycle, isStale);
 		}
 	}

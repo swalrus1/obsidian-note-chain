@@ -1,5 +1,5 @@
-import { App, TFile } from "obsidian";
-import { computeGraph, computeTitle } from "./graph";
+import { App } from "obsidian";
+import { computeGraph, computeTitle, resolveAndSortByCtime } from "./graph";
 
 const LOG_PREFIX = "[note-chain]";
 
@@ -16,14 +16,9 @@ export class TitleStore {
 
 			this.map.clear();
 
-			for (const path of [...rootNodes, ...cycleRoots]) {
-				const file = app.vault.getAbstractFileByPath(path);
-				if (!(file instanceof TFile)) {
-					console.warn(LOG_PREFIX, `Expected a TFile at path "${path}" but got none.`);
-					continue;
-				}
-				const title = computeTitle(path, outLinks, inLinks, app) ?? file.basename;
-				this.map.set(title, path);
+			for (const file of resolveAndSortByCtime([...rootNodes, ...cycleRoots], app)) {
+				const title = computeTitle(file.path, outLinks, inLinks, app) ?? file.basename;
+				this.map.set(title, file.path);
 			}
 		} catch (e) {
 			console.error(LOG_PREFIX, "Failed to rebuild title store:", e);
