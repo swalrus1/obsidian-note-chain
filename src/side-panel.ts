@@ -1,7 +1,9 @@
 import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
-import { computeGraph, computeTitle, chainSize } from "./graph";
+import { computeGraph, computeTitle } from "./graph";
 
 const LOG_PREFIX = "[note-chain]";
+
+const STALE_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000;
 
 export const VIEW_TYPE_ROOT_NOTES = "note-chain";
 
@@ -46,26 +48,35 @@ export class RootNotesView extends ItemView {
 
 		const ul = container.createEl("ul", { cls: "root-notes-list" });
 
-		const entries: { path: string; isCycle: boolean; chainSize: number }[] = [];
-		for (const path of rootNodes)  entries.push({ path, isCycle: false, chainSize: chainSize(path, outLinks) });
-		for (const path of cycleRoots) entries.push({ path, isCycle: true,  chainSize: chainSize(path, outLinks) });
-		entries.sort((a, b) => b.chainSize - a.chainSize);
-
-		for (const { path, isCycle } of entries) {
+		const entries: { path: string; isCycle: boolean; file: TFile; ctime: number }[] = [];
+		for (const path of [...rootNodes, ...cycleRoots]) {
 			const file = this.app.vault.getAbstractFileByPath(path);
 			if (!(file instanceof TFile)) {
 				console.warn(LOG_PREFIX, `Expected a TFile at path "${path}" but got none.`);
 				continue;
 			}
+			entries.push({
+				path,
+				isCycle: cycleRoots.includes(path),
+				file,
+				ctime: file.stat.ctime,
+			});
+		}
+		entries.sort((a, b) => b.ctime - a.ctime);
+
+		const now = Date.now();
+		for (const { path, isCycle, file, ctime } of entries) {
 			const title = computeTitle(path, outLinks, inLinks, this.app) ?? file.basename;
-			this.createNoteItem(ul, file, title, isCycle);
+			const isStale = now - ctime > STALE_THRESHOLD_MS;
+			this.createNoteItem(ul, file, title, isCycle, isStale);
 		}
 	}
 
-	private createNoteItem(ul: HTMLElement, file: TFile, title: string, isCycle: boolean) {
-		const li = ul.createEl("li", {
-			cls: isCycle ? "root-notes-item root-notes-cycle" : "root-notes-item",
-		});
+	private createNoteItem(ul: HTMLElement, file: TFile, title: string, isCycle: boolean, isStale: boolean) {
+		const classes = ["root-notes-item"];
+		if (isCycle) classes.push("root-notes-cycle");
+		if (isStale) classes.push("is-stale");
+		const li = ul.createEl("li", { cls: classes.join(" ") });
 		const link = li.createEl("a", { text: title, cls: "root-notes-link" });
 		if (isCycle) {
 			li.createEl("span", {

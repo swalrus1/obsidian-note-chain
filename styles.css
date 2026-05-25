@@ -17,6 +17,10 @@
     background-color: var(--background-secondary);
 }
 
+.root-notes-item.is-stale {
+    opacity: 0.5;
+}
+
 .root-notes-thread-btn {
     visibility: hidden;
     position: absolute;

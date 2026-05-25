@@ -70,8 +70,11 @@ The dynamic command-id lookup exists because Obsidian's core plugin command IDs 
 
 **Render cycle** (called by `refreshRootNotesView()` and `onOpen`):
 1. Calls `computeGraph(app)` to get `rootNodes`, `cycleNodes`, `outLinks`, `inLinks`.
-2. For each node path, calls `computeTitle(...)` → falls back to `file.basename`.
-4. Renders an `<ul>` where each `<li>` contains:
+2. Resolves each path to a `TFile`; skips with a warn if not a `TFile`.
+3. Sorts entries by `file.stat.ctime` **descending** (newest root note first). The biggest-chain-first sort is intentionally not applied — surfacing recent activity is the product intent (chains become "disposable" with age).
+4. For each node path, calls `computeTitle(...)` → falls back to `file.basename`.
+5. Computes `isStale = (Date.now() - ctime) > STALE_THRESHOLD_MS` where `STALE_THRESHOLD_MS = 30 days`. Stale chains receive the `is-stale` class; `styles.css` fades them to `opacity: 0.5`. This is a deliberate visual de-emphasis, not a filter — stale chains remain clickable.
+6. Renders an `<ul>` where each `<li>` contains:
    - A clickable `<a>` that opens the note in the current leaf.
    - A `↺` span for cycle nodes.
    - A thread-view button (list-lines SVG icon) that calls `plugin.openThreadView(file)`. The button is hidden via CSS and revealed on `li:hover`.
