@@ -1,19 +1,19 @@
-# Note Chain
+# Chain
 
 _A plugin for Obsidian that helps to organise notes._
 
-In a large personal knowledge base, it's hard to **easily add information and keep it queryable**. As a solution, you could **link each new note to the last note on the same topic**. Notes on the same topic will natually form long sequences, a.k.a. **chains**.
+When a knowledge base grows to thousands notes, it becomes to hard to **add information while keeping it retrievable**. As a solution, you could **link each new note to the last note on the same topic**. Notes on the same topic will natually form long sequences, a.k.a. **chains**.
 
-Note chain plugin adds 2 features:
+_Chain_ plugin adds 2 features:
 1. **Link a new note to a chain in 2 clicks**, even if your knowledge base contains thousands of notes collected over many years.
 2. **Display all notes in a chain** so you can read them as a diary.
 
 A typical workflow is:
 1. **Learn something interesting!**
-2. **Write it down in a new note.** Don't waste effort on categorising it: don't add tags, don't choose name, don't reference other notes as in Zettelkasten.
-3. **When you have time, link it to another note on the same topic.** _Note chain_ has a command for that. It also displays all unlinked notes, so you won't forget.
+2. **Create a new note and write down your thoughts.** Don't waste effort on categorising it: don't add tags, don't choose name, don't reference other notes as in Zettelkasten.
+3. **When you have time, add add a reference from the new note to another note on the same topic.** _Chain_ plugin has a command for that. It also displays all unlinked notes, so you won't forget.
 
-To sum up, **note chains are like tags**, but you can merge and rename chains by modifying 1 note instead of every note with the tag. Scalability is crucial when your knowledge base grows to thousands of notes.
+Chains bring the same benefit as tags, but more scalable. For instance, to merge one tag with another, you need to modify all notes that contain the tag. On the contrary, to merge two _chains_, you can create one note that references both chains, which will merge them into one. This scalability makes a knowledge base with thousands of notes manageable.
 
 ## Example: a small chain about lasagna
 
