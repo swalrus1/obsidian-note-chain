@@ -13,7 +13,7 @@ A typical workflow is:
 2. **Write it down in a new note.** Don't waste effort on categorising it: don't add tags, don't choose name, don't reference other notes as in Zettelkasten.
 3. **When you have time, link it to another note on the same topic.** _Note chain_ has a command for that. It also displays all unlinked notes, so you won't forget.
 
-To sum up, **chains are like tags**, but you can merge and rename chains by modifying 1 note instead of every note with a tag, which is crucial for a knowledge base with thousands of notes.
+To sum up, **note chains are like tags**, but you can merge and rename chains by modifying 1 note instead of every note with a tag, which is crucial for a knowledge base with thousands of notes.
 
 ## What is a note chain?
 
