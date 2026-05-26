@@ -3,6 +3,14 @@ import { buildLinkMaps, basename } from "./graph";
 
 const LOG_PREFIX = "[note-chain]";
 
+// Paragraphs consisting only of wikilink lines (e.g. successor references) add
+// no readable content to the thread — strip them before rendering.
+const WIKILINK_ONLY_PARA = /(\[\[[^\]]*\]\]\n)+\n?/g;
+
+function preprocessContent(content: string): string {
+	return content.replace(WIKILINK_ONLY_PARA, "");
+}
+
 export const VIEW_TYPE_THREAD = "thread-view";
 
 /**
@@ -97,7 +105,7 @@ export class ThreadView extends ItemView {
 
 			const body = section.createEl("div", { cls: "thread-note-body" });
 			try {
-				await MarkdownRenderer.render(this.app, content, body, file.path, this);
+				await MarkdownRenderer.render(this.app, preprocessContent(content), body, file.path, this);
 			} catch (e) {
 				console.error(LOG_PREFIX, `Thread view: failed to render "${file.path}":`, e);
 				body.setText(content);
