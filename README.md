@@ -1,9 +1,9 @@
 # Note Chain
 
 An [Obsidian](https://obsidian.md) plugin that shows a side panel listing
-all notes that have no backlinks — the "roots" of your knowledge graph.
-Each root note is titled by the `thread` frontmatter field (resolved via
-[Dataview](https://github.com/blacksmithgu/obsidian-dataview)).
+the roots of maximum-inclusion note chains — notes whose chain is not
+referenced from outside it. Cycle representatives are shown in red.
+Each root note is titled by its `chain` frontmatter field.
 
 ## How to Use It?
 
