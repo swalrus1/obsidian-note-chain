@@ -32,7 +32,7 @@ The plugin is not yet in the community registry. The easiest way to install it �
 1. Install **Obsidian42 - BRAT** from **Settings → Community plugins → Browse** and enable it.
 2. Open **Settings → BRAT → Add Beta plugin** and paste:
    ```
-   swalrus1/obsidian-root-node
+   swalrus1/obsidian-note-chain
    ```
 3. Confirm. BRAT downloads the latest release and enables Note Chain automatically. New releases are picked up by BRAT on Obsidian startup.
 
