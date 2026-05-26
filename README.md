@@ -15,19 +15,9 @@ A typical workflow is:
 
 To sum up, **note chains are like tags**, but you can merge and rename chains by modifying 1 note instead of every note with the tag. Scalability is crucial when your knowledge base grows to thousands of notes.
 
-## What is a note chain?
-
-A **note chain** is a set of notes defined by a root: the chain contains the root and every note reachable from it through `[[wikilinks]]`. A **maximum-inclusion chain** is a chain not contained in any other chain — its root is what Note Chain surfaces.
-
-The core writing habit is:
-
-> If a new note is related to an existing chain, reference the last note in that chain.
-
-Over time this grows a forest of chains rooted in your "north-star" notes — and the plugin keeps that forest within reach.
-
 ## Example: a small chain about lasagna
 
-Imagine writing five notes while reading the [Wikipedia article on lasagna](https://en.wikipedia.org/wiki/Lasagna). The contents of each note:
+Imagine writing notes while reading the [Wikipedia article on lasagna](https://en.wikipedia.org/wiki/Lasagna). The contents of each note:
 
 **A — `pasta-sheets.md`**
 ```
@@ -61,7 +51,7 @@ The resulting reference graph:
 
 ![Chain diagram for the lasagna example](docs/example-chain.svg)
 
-Only `bolognese.md` (E) has no incoming references, so the side panel shows a single chain titled **lasagna** rooted at it. Opening *Thread view* on that root renders all five notes as one scrolling document. Adding a sixth note that references `[[bolognese]]` would make the new note the root and grow the chain.
+`bolognese.md` (E) is the root of the note chain - it has no incoming references. When writing another note about lasagna, reference `bolognese.md` - new note willl become the root of this root chain.
 
 ## Features
 
