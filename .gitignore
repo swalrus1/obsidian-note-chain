@@ -4,6 +4,7 @@ node_modules/
 # Build output
 main.js
 *.js.map
+cli/dist/
 
 # AI / Claude
 .claude/

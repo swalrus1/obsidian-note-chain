@@ -29,6 +29,20 @@ test:
 dev:
     npm run dev
 
+# Build the CLI to cli/dist/cli.js
+build-cli:
+    npm run build:cli
+
+# Run the CLI (forwards args)
+cli *ARGS:
+    node cli/dist/cli.js {{ARGS}}
+
+# Symlink the manage-notes skill into ~/.claude/skills for Claude Code to discover
+install-skill:
+    mkdir -p ~/.claude/skills
+    ln -sfn "$(pwd)/skills/manage-notes" ~/.claude/skills/manage-notes
+    @echo "Linked $(pwd)/skills/manage-notes -> ~/.claude/skills/manage-notes"
+
 # Bump patch version, commit, tag, and push to trigger the release workflow
 release:
     #!/usr/bin/env node

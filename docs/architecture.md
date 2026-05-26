@@ -1,7 +1,39 @@
 # Plugin Architecture
 
-All source code is in `src/`. Styles are in `styles.css`.
-Built with esbuild; output is `main.js` (single CommonJS bundle).
+## Code layout
+
+- `core/` — pure logic with **no Obsidian imports**. Single source of truth for
+  graph + title computation:
+  - `core/buildLinkMaps.ts` — pure `buildLinkMaps(filePaths, resolvedLinks)`.
+  - `core/graph.ts` — `computeGraph`, `chainNotes` (BFS from a root over
+    `outLinks`), `chainSize`, `basename`, `normalizeChain`.
+  - `core/title.ts` — `computeTitle(rootPath, outLinks, getFrontmatter)`,
+    parameterised over a frontmatter reader.
+  - `core/types.ts` — `LinkMaps`, `GraphData`, `ResolvedLinks`,
+    `FrontmatterReader`.
+- `src/` — Obsidian-flavoured adapter over `core/`. Bundled by esbuild into
+  `main.js` (single CommonJS bundle for Obsidian).
+  - `src/graph.ts` is a thin wrapper: `buildLinkMaps(app)` reads
+    `app.vault.getMarkdownFiles()` + `app.metadataCache.resolvedLinks` and
+    delegates; `computeTitle(...)` builds a frontmatter reader from
+    `app.metadataCache.getCache(path)?.frontmatter` and delegates;
+    `resolveAndSortByCtime` stays here because it needs the Obsidian
+    `TFile.stat.ctime` accessor.
+- `cli/` — standalone Node CLI bundled by `cli/esbuild.config.mjs` into
+  `cli/dist/cli.js`. Loads a vault directory from disk (`cli/src/fs-vault.ts`),
+  parses YAML frontmatter via `js-yaml`, resolves wikilinks (basename or
+  relative path), then drives `core/` directly. Commands: `list`, `get`,
+  `create`, `list-notes` (see `cli/src/commands/`).
+- `skills/manage-notes/` — Claude Code skill source (`SKILL.md`). Single-file
+  skill that translates natural-language requests into CLI invocations and
+  emits relative note paths. Refuses content-reading requests. Install via
+  `just install-skill` (symlinks into `~/.claude/skills/`).
+- `test/` — all vitest tests. Pure-logic tests target `core/` directly; plugin
+  tests go through `src/graph.ts` (via the in-memory mock at
+  `test/helpers.ts`); CLI tests build ephemeral vaults with `fs.mkdtempSync`.
+
+Styles are in `styles.css`. The plugin bundle is built with esbuild; output is
+`main.js`.
 
 ---
 
