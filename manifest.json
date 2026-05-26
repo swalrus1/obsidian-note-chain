@@ -1,6 +1,6 @@
 {
 	"id": "chain",
-	"name": "Note Chain",
+	"name": "Chain",
 	"version": "1.0.19",
 	"minAppVersion": "0.15.0",
 	"description": "Organise notes in chains to easily expand a large knowledge base",
