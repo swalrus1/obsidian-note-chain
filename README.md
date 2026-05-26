@@ -14,6 +14,44 @@ The core writing habit is:
 
 Over time this grows a forest of chains rooted in your "north-star" notes — and the plugin keeps that forest within reach.
 
+## Example: a small chain about lasagna
+
+Imagine writing five notes while reading the [Wikipedia article on lasagna](https://en.wikipedia.org/wiki/Lasagna). The contents of each note:
+
+**A — `pasta-sheets.md`**
+```
+Flat rectangular pasta sheets, the structural element of lasagna.
+```
+
+**B — `layering.md`**
+```
+Cooked [[pasta-sheets]] alternate with sauce and cheese in a stacked assembly.
+```
+
+**C — `bechamel.md`**
+```
+Milk thickened with a butter-and-flour roux, often seasoned with nutmeg.
+```
+
+**D — `lasagne-al-forno.md`**
+```
+Oven-baked lasagna: [[layering]] separated by a coat of [[bechamel]] between each layer.
+```
+
+**E — `bolognese.md`**
+```
+---
+chain: lasagna
+---
+The Emilia-Romagna variant of [[lasagne-al-forno]], dressed with slow-cooked ragù bolognese.
+```
+
+The resulting reference graph:
+
+![Chain diagram for the lasagna example](docs/example-chain.svg)
+
+Only `bolognese.md` (E) has no incoming references, so the side panel shows a single chain titled **lasagna** rooted at it. Opening *Thread view* on that root renders all five notes as one scrolling document. Adding a sixth note that references `[[bolognese]]` would make the new note the root and grow the chain.
+
 ## Features
 
 - **Side panel** listing roots of maximum-inclusion chains, sorted by creation time (newest first). Chains untouched for more than 30 days fade to half opacity.
