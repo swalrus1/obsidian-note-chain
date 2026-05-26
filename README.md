@@ -4,7 +4,9 @@ _A plugin for Obsidian that helps to organise notes._
 
 In a large personal knowledge base, it's hard to **easily add information and keep it queryable**. As a solution, you could **link each new note to the last note on the same topic**. Notes on the same topic will natually form long sequences, a.k.a. **chains**.
 
-**This plugin allows linking a new note to a chain in 2 clicks**, even if your knowledge base contains thousands of notes collected over many years. And it can displays all notes in a chain so you can read them as a diary.
+Note chain plugin adds 2 features:
+1. **Link a new note to a chain in 2 clicks**, even if your knowledge base contains thousands of notes collected over many years.
+2. **Display all notes in a chain** so you can read them as a diary.
 
 A typical workflow is:
 1. **Learn something interesting!**
