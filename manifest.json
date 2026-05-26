@@ -3,8 +3,8 @@
 	"name": "Note Chain",
 	"version": "1.0.19",
 	"minAppVersion": "0.15.0",
-	"description": "Lists notes with no backlinks in a side panel. Highlights cycle representatives in red.",
-	"author": "",
+	"description": "Organise notes in chains to easily expand a large knowledge base",
+	"author": "semyon",
 	"authorUrl": "",
 	"isDesktopOnly": false
 }
