@@ -1,8 +1,15 @@
 # Note Chain
 
-> Surface the roots of your knowledge graph — in [Obsidian](https://obsidian.md), in your shell, or by asking Claude.
+"Note chain" is a plugin for Obsidian that addresses the issue:
 
-Note Chain is an opinionated note-taking workflow plugin. It finds the **root notes** of your vault — the entry points to every line of thought you've ever written — and keeps them within one click. The same chain semantics are exposed as a standalone CLI and as a Claude Code skill, so the way you think about your notes is consistent everywhere you reach for them.
+> How to **easily add information** to a large personal knowledge base while **keeping it queryable**?
+
+To easily add information, you could link each **new note** to the **last note on the same topic**. Notes on the same topic will natually form long sequences, a.k.a. **chains**. This plugin allows linking a new note in 2 clicks, even if your knowledge base contains thousands of notes collected over many years. And it can displays all notes in a chain so you can read them as a diary. That's all - it's simple.
+
+A typical workflow is:
+1. **Learn something interesting!**
+2. **Write it down in a new note.** Don't waste effort on categorising it.
+3. **When you have time, link it to another note on the same topic.** _Note chain_ has a command for that. It also displays all unlinked notes, so you won't forget.
 
 ## What is a note chain?
 
