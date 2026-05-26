@@ -27,16 +27,14 @@ Over time this grows a forest of chains rooted in your "north-star" notes — an
 
 ## Install (Obsidian)
 
-> [!NOTE]
-> The plugin is not yet in the community registry. Install it manually from a release tag, or build it locally.
+The plugin is not yet in the community registry. The easiest way to install it — and to receive auto-updates on every release — is via [BRAT](https://github.com/TfTHacker/obsidian42-brat):
 
-```sh
-npm install
-npm run build
-cp main.js manifest.json styles.css /path/to/vault/.obsidian/plugins/note-chain/
-```
-
-Then in Obsidian: **Settings → Community plugins → Note Chain → Enable**.
+1. Install **Obsidian42 - BRAT** from **Settings → Community plugins → Browse** and enable it.
+2. Open **Settings → BRAT → Add Beta plugin** and paste:
+   ```
+   swalrus1/obsidian-root-node
+   ```
+3. Confirm. BRAT downloads the latest release and enables Note Chain automatically. New releases are picked up by BRAT on Obsidian startup.
 
 > [!TIP]
 > The *Create successor* command delegates filename generation to Obsidian's built-in **Unique Note Creator** core plugin (or the community **ZK Prefixer** plugin). Enable one of them if you plan to use that command.
