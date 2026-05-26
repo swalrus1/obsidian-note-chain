@@ -5,9 +5,9 @@ const LOG_PREFIX = "[note-chain]";
 
 // Paragraphs consisting only of wikilink lines (e.g. successor references) add
 // no readable content to the thread — strip them before rendering.
-const WIKILINK_ONLY_PARA = /(\[\[[^\]]*\]\]\n)+\n?/g;
+const WIKILINK_ONLY_PARA = /(\[\[[^\]]*\]\](?:\n|$))+\n?/g;
 
-function preprocessContent(content: string): string {
+export function preprocessContent(content: string): string {
 	return content.replace(WIKILINK_ONLY_PARA, "");
 }
 
